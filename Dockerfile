@@ -1,11 +1,5 @@
 FROM node:20-alpine AS base
 
-# --- Dependencies ---
-FROM base AS deps
-WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
-
 # --- Builder ---
 FROM base AS builder
 WORKDIR /app
@@ -31,17 +25,20 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy built app
+# Copy built app (standalone includes node_modules it needs)
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy Prisma for migrations
+# Copy Prisma schema + migrations for `prisma migrate deploy`
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/package.json ./package.json
+
+# Install only prisma CLI for migrations
+RUN npm install prisma@7.5.0 --save-exact --omit=dev 2>/dev/null || true
+
+# Copy generated Prisma client
 COPY --from=builder /app/src/generated ./src/generated
 
 # Create uploads directory
