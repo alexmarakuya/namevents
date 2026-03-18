@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NāM Events Hub
 
-## Getting Started
+Events management app for the NāM community on Koh Phangan, Thailand.
 
-First, run the development server:
+## Setup
+
+### Prerequisites
+- Node.js 20+
+- Docker (for PostgreSQL)
+
+### 1. Start the database
+
+```bash
+docker compose up -d
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Configure environment
+
+```bash
+cp .env.example .env
+# Edit .env with your credentials
+```
+
+### 4. Run migrations and seed
+
+```bash
+npx prisma migrate dev
+npx prisma db seed
+```
+
+### 5. Start the dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 — sign in with the credentials from your `.env` file.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Public API
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Events marked as public are available via REST API:
 
-## Learn More
+```bash
+# List all public events
+curl http://localhost:3000/api/events
 
-To learn more about Next.js, take a look at the following resources:
+# Filter by entity
+curl http://localhost:3000/api/events?entity=kin_haus
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Filter by stage
+curl http://localhost:3000/api/events?stage=confirmed,announced
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Single event (by ID or slug)
+curl http://localhost:3000/api/events/ai-meetup-phangan-3
+```
 
-## Deploy on Vercel
+## Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Next.js 16 (App Router) + TypeScript + Tailwind CSS v4
+- PostgreSQL + Prisma ORM v7
+- JWT auth (jose)
+- Drag-and-drop pipeline (dnd-kit)

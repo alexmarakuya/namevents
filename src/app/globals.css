@@ -1,26 +1,78 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-base: #f5f2e9;
+  --bg-surface: #ede9df;
+  --bg-card: #ffffff;
+  --bg-elevated: #e7e2d6;
+  --border: #d9d4c9;
+  --border-subtle: #e4e0d7;
+  --text-primary: #2b3a2c;
+  --text-secondary: #61605c;
+  --text-muted: #7d7970;
+  --accent: #d56b45;
+  --accent-hover: #c25a37;
+  --accent-soft: rgba(213, 107, 69, 0.08);
+  --entity-kin-haus: #D97706;
+  --entity-ai-meetup: #7C3AED;
+  --entity-island-connection: #059669;
+  --entity-nam-space: #0891B2;
+  --entity-external: #6B7280;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-bg-base: var(--bg-base);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-card: var(--bg-card);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-entity-kin-haus: var(--entity-kin-haus);
+  --color-entity-ai-meetup: var(--entity-ai-meetup);
+  --color-entity-island-connection: var(--entity-island-connection);
+  --color-entity-nam-space: var(--entity-nam-space);
+  --color-entity-external: var(--entity-external);
+  --font-display: var(--font-epilogue);
+  --font-body: var(--font-sometype);
+  --font-mono: var(--font-sometype);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #b8b3a8;
+}
+
+/* Focus styles */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: rgba(213, 107, 69, 0.2);
+  color: var(--text-primary);
 }

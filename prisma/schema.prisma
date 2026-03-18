@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Entity {
+  KIN_HAUS
+  AI_MEETUP
+  ISLAND_CONNECTION
+  NAM_SPACE
+  EXTERNAL
+}
+
+enum EventFormat {
+  SOCIAL
+  MEETUP
+  WORKSHOP
+  PERFORMANCE
+  COMMUNITY
+  RETREAT
+  POPUP
+}
+
+enum EventStage {
+  SEED
+  BREWING
+  CONFIRMED
+  ANNOUNCED
+  DONE
+  CANCELLED
+}
+
+model Event {
+  id              String         @id @default(cuid())
+  title           String
+  slug            String         @unique
+  entity          Entity
+  format          EventFormat
+  stage           EventStage     @default(SEED)
+  date            DateTime?
+  endDate         DateTime?
+  venueId         String?
+  venue           Venue?         @relation(fields: [venueId], references: [id])
+  location        String?        // Legacy — use venue instead
+  locationUrl     String?        // Legacy — use venue instead
+  description     String?
+  shortBlurb      String?
+  coverImage      String?
+  images          String[]
+  public          Boolean        @default(false)
+  shareToken      String?        @unique
+  tags            String[]
+  coHosts         String[]       // Deprecated — use EventPerson instead
+  capacity        Int?
+  registrationUrl String?
+  externalUrl     String?
+  notes           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  distributions   Distribution[]
+  people          EventPerson[]
+
+  @@index([entity])
+  @@index([stage])
+  @@index([public])
+  @@index([date])
+  @@index([venueId])
+}
+
+model Venue {
+  id          String   @id @default(cuid())
+  name        String
+  address     String?
+  mapsUrl     String?
+  photo       String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  events      Event[]
+}
+
+model Person {
+  id          String        @id @default(cuid())
+  name        String
+  email       String?
+  photo       String?       // URL
+  bio         String?
+  website     String?
+  instagram   String?
+  linkedin    String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  events      EventPerson[]
+}
+
+enum EventRole {
+  HOST
+  SPEAKER
+}
+
+model EventPerson {
+  id        String    @id @default(cuid())
+  eventId   String
+  personId  String
+  role      EventRole
+  order     Int       @default(0)
+  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  person    Person    @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, personId, role])
+  @@index([eventId])
+  @@index([personId])
+}
+
+model Distribution {
+  id        String   @id @default(cuid())
+  eventId   String
+  platform  String   // e.g. "Luma", "Todo Today", "WhatsApp", "Instagram", "Facebook", "LinkedIn"
+  url       String?  // Link to the event/post on that platform (optional)
+  postedAt  DateTime @default(now())
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+}
