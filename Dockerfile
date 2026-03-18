@@ -35,8 +35,8 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/package.json ./package.json
 
-# Install only prisma CLI for migrations
-RUN npm install prisma@7.5.0 --save-exact --omit=dev 2>/dev/null || true
+# Install prisma CLI + dotenv for migrations
+RUN npm install prisma@7.5.0 dotenv@17 --save-exact 2>/dev/null || true
 
 # Copy generated Prisma client
 COPY --from=builder /app/src/generated ./src/generated
