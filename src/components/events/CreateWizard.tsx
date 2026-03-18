@@ -56,12 +56,28 @@ function OkButton({ onClick, label = "OK", hint = "press Enter" }: { onClick: ()
 }
 
 export function CreateWizard() {
+  // Default date to 3 days from now
+  const defaultDate = new Date();
+  defaultDate.setDate(defaultDate.getDate() + 3);
+  const defaultDateStr = defaultDate.toISOString().split("T")[0];
+
   const [title, setTitle] = useState("");
   const [entity, setEntity] = useState<Entity>("EXTERNAL");
   const [format, setFormat] = useState<EventFormat>("SOCIAL");
-  const [date, setDate] = useState("");
+  const [dateValue, setDateValue] = useState(defaultDateStr);
+  const [timeValue, setTimeValue] = useState("18:00");
   const [location, setLocation] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Generate 30-minute time slots
+  const TIME_SLOTS: string[] = [];
+  for (let h = 0; h < 24; h++) {
+    for (let m = 0; m < 60; m += 30) {
+      TIME_SLOTS.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+    }
+  }
+
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
   const [activeSection, setActiveSection] = useState(0);
   const [completedSections, setCompletedSections] = useState<Set<number>>(new Set());
@@ -117,7 +133,12 @@ export function CreateWizard() {
       case 0: return title || "Untitled";
       case 1: return ENTITY_LABELS[entity];
       case 2: return FORMAT_LABELS[format];
-      case 3: return date ? new Date(date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) : "No date yet";
+      case 3: {
+        if (!dateValue) return "No date yet";
+        const d = new Date(dateValue + "T" + (timeValue || "00:00"));
+        const dateStr = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+        return timeValue ? `${dateStr} at ${timeValue}` : dateStr;
+      }
       case 4: return location || "No venue yet";
       default: return "";
     }
@@ -137,7 +158,10 @@ export function CreateWizard() {
     formData.set("entity", entity);
     formData.set("format", format);
     formData.set("stage", "SEED");
-    if (date) formData.set("date", date);
+    if (dateValue) {
+      const combined = dateValue + "T" + (timeValue || "00:00");
+      formData.set("date", combined);
+    }
     if (location) formData.set("location", location);
     formData.set("public", "false");
     await createEvent(formData);
@@ -146,9 +170,14 @@ export function CreateWizard() {
   return (
     <div className="min-h-screen bg-bg-base">
       {/* Header */}
-      <div className="border-b border-border bg-bg-card px-6 py-4 flex items-center gap-3">
-        <Logo className="h-5 w-auto" />
-        <span className="text-text-muted text-xs font-mono">Events</span>
+      <div className="border-b border-border px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Logo className="h-5 w-auto" />
+          <span className="text-text-muted text-xs font-mono">Events</span>
+        </div>
+        <a href="/dashboard" className="rounded-full border border-border hover:border-text-secondary text-text-secondary font-mono text-[13px] py-2 px-3 transition-colors">
+          Cancel
+        </a>
       </div>
 
       <main className="mx-auto max-w-xl px-5 py-8 sm:py-12">
@@ -268,14 +297,37 @@ export function CreateWizard() {
 
                 {index === 3 && (
                   <div>
-                    <input
-                      type="datetime-local"
-                      autoFocus
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="w-full rounded-xl border border-border bg-bg-base px-4 py-3 text-text-primary focus:border-accent focus:outline-none transition-colors"
-                    />
-                    <OkButton onClick={() => advanceSection(3)} label={date ? "OK" : "Skip"} hint={date ? "press Enter" : "add later"} />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs text-text-muted mb-1.5 uppercase tracking-wider font-mono">Date</label>
+                        <div
+                          className="relative cursor-pointer"
+                          onClick={() => dateInputRef.current?.showPicker()}
+                        >
+                          <input
+                            ref={dateInputRef}
+                            type="date"
+                            autoFocus
+                            value={dateValue}
+                            onChange={(e) => setDateValue(e.target.value)}
+                            className="w-full rounded-xl border border-border bg-bg-base px-4 py-3 text-text-primary focus:border-accent focus:outline-none transition-colors cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-text-muted mb-1.5 uppercase tracking-wider font-mono">Time</label>
+                        <select
+                          value={timeValue}
+                          onChange={(e) => setTimeValue(e.target.value)}
+                          className="w-full rounded-xl border border-border bg-bg-base px-4 py-3 text-text-primary focus:border-accent focus:outline-none transition-colors cursor-pointer"
+                        >
+                          {TIME_SLOTS.map((t) => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <OkButton onClick={() => advanceSection(3)} label="OK" hint="press Enter" />
                   </div>
                 )}
 

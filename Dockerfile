@@ -30,13 +30,15 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy Prisma schema + migrations for `prisma migrate deploy`
+# Copy Prisma schema + migrations + config for `prisma migrate deploy`
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/package.json ./package.json
 
-# Install prisma CLI + dotenv for migrations
-RUN npm install prisma@7.5.0 dotenv@17 --save-exact 2>/dev/null || true
+# Copy prisma CLI and dotenv from builder's node_modules
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/dotenv ./node_modules/dotenv
 
 # Copy generated Prisma client
 COPY --from=builder /app/src/generated ./src/generated
