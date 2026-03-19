@@ -89,8 +89,10 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Orange glow */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-accent/10 blur-[120px] animate-pulse-glow pointer-events-none" />
+      <div className="w-full max-w-sm relative z-10">
         <div className="flex flex-col items-center mb-10">
           <svg viewBox="0 0 74.5549 28.0001" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8 w-auto text-accent mb-3" aria-label="NaM">
             <path d="M55.7424 27.5041V0.688065H60.528L65.1074 16.1176L69.6455 0.688065H74.5549V27.5041H71.0069V5.96876L66.2213 22.1409H63.8697L59.0841 5.96876V27.5041H55.7424Z" fill="currentColor" />
