@@ -63,7 +63,7 @@ function addOneHour(time: string): string {
 function Section({ title, defaultOpen = false, children, badge }: { title: string; defaultOpen?: boolean; children: React.ReactNode; badge?: string }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border-t border-border-subtle">
+    <div>
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -304,8 +304,57 @@ export function EventForm({ event, venues = [], people = [] }: Props) {
   const inputClass = "w-full rounded-xl border border-border bg-bg-card px-4 py-3 text-text-primary placeholder:text-text-muted/50 focus:border-accent focus:outline-none transition-colors";
   const labelClass = "block text-xs text-text-muted mb-1.5 uppercase tracking-wider font-mono";
 
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
   return (
-    <form ref={formRef} action={handleSubmit} className="mx-auto max-w-2xl">
+    <form ref={formRef} action={handleSubmit}>
+      {/* ── Form Content ── */}
+      <div className="mx-auto max-w-2xl px-5 sm:px-0 pt-8">
+
+      {/* ── Cover Image Card ── */}
+      <div
+        className="relative rounded-2xl overflow-hidden cursor-pointer group mb-6 border border-border"
+        onClick={() => bannerInputRef.current?.click()}
+      >
+        {coverPreview ? (
+          <>
+            <div className="w-full aspect-[2.5/1]">
+              <img src={coverPreview} alt="" className="w-full h-full object-cover" />
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setCoverPreview(null); }}
+              className="absolute top-3 right-3 bg-black/50 hover:bg-black/70 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              &times;
+            </button>
+            <div className="absolute bottom-3 left-3 bg-black/50 text-white/70 rounded-full px-3 py-1 text-xs font-mono opacity-0 group-hover:opacity-100 transition-opacity">
+              Click to change
+            </div>
+          </>
+        ) : (
+          <div className="w-full bg-bg-card flex flex-col items-center justify-center py-12 hover:bg-bg-elevated transition-colors">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7 text-text-muted mb-2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+            </svg>
+            <span className="text-sm text-text-muted font-mono">Add cover image</span>
+          </div>
+        )}
+        <input
+          ref={bannerInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleImageUpload}
+          className="hidden"
+        />
+        {uploading && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-2xl">
+            <span className="text-white font-mono text-sm animate-pulse">Uploading...</span>
+          </div>
+        )}
+      </div>
+
       {/* ── Title ── */}
       <div className="mb-6">
         <input
@@ -438,22 +487,6 @@ export function EventForm({ event, venues = [], people = [] }: Props) {
           <textarea name="description" defaultValue={event?.description ?? ""} rows={6} className={`${inputClass} resize-y`} placeholder="Full event description" />
         </div>
 
-        {/* Cover Image */}
-        <div>
-          <label className={labelClass}>Cover Image</label>
-          <div className="flex items-start gap-3">
-            {coverPreview && (
-              <div className="relative w-24 h-16 rounded-lg overflow-hidden bg-bg-elevated flex-shrink-0">
-                <img src={coverPreview} alt="" className="w-full h-full object-cover" />
-                <button type="button" onClick={() => setCoverPreview(null)} className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]">&times;</button>
-              </div>
-            )}
-            <label className="flex items-center gap-2 rounded-xl border border-dashed border-border hover:border-accent px-4 py-2.5 cursor-pointer transition-colors text-xs text-text-secondary">
-              {uploading ? "Uploading..." : "Upload"}
-              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageUpload} className="hidden" />
-            </label>
-          </div>
-        </div>
       </div>
 
       {/* ── Collapsible: More Details ── */}
@@ -642,6 +675,8 @@ export function EventForm({ event, venues = [], people = [] }: Props) {
           </>
         )}
       </div>
+
+      </div>{/* close max-w-2xl wrapper */}
     </form>
   );
 }
