@@ -22,6 +22,12 @@ export function Header() {
 
       <div className="flex items-center gap-3">
         <Link
+          href="/settings/venues"
+          className="text-text-muted hover:text-text-secondary font-mono text-[13px] py-2 px-3 transition-colors"
+        >
+          Venues
+        </Link>
+        <Link
           href="/events/new"
           className="rounded-full bg-accent hover:bg-accent-hover text-white font-mono text-[13px] font-medium py-2 px-4 transition-colors"
         >
