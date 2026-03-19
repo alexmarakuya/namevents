@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -30,6 +30,11 @@ const ENTITIES: (Entity | null)[] = [null, "KIN_HAUS", "AI_MEETUP", "ISLAND_CONN
 export function Board({ events: initialEvents, activeEntity }: Props) {
   const [events, setEvents] = useState(initialEvents);
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
+
+  // Sync state when server data changes (e.g. entity filter)
+  useEffect(() => {
+    setEvents(initialEvents);
+  }, [initialEvents]);
   const router = useRouter();
   const searchParams = useSearchParams();
 
