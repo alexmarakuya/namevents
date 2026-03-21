@@ -55,9 +55,12 @@ model Event {
   shareToken      String?        @unique
   tags            String[]
   coHosts         String[]       // Deprecated — use EventPerson instead
+  price           String?
   capacity        Int?
   registrationUrl String?
   externalUrl     String?
+  platformEventId String?        // ID of the synced event on NāM Platform
+  platformSyncedAt DateTime?     // Last sync timestamp
   notes           String?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
@@ -77,6 +80,8 @@ model Venue {
   address     String?
   mapsUrl     String?
   photo       String?
+  description String?  // Short blurb about the venue
+  directions  String?  // How to get there
   notes       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

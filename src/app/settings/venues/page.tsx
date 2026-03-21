@@ -10,6 +10,8 @@ interface Venue {
   address: string | null;
   mapsUrl: string | null;
   photo: string | null;
+  description: string | null;
+  directions: string | null;
   notes: string | null;
   _count?: { events: number };
 }
@@ -24,6 +26,8 @@ export default function VenuesPage() {
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
+  const [description, setDescription] = useState("");
+  const [directions, setDirections] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -44,6 +48,8 @@ export default function VenuesPage() {
     setName("");
     setAddress("");
     setMapsUrl("");
+    setDescription("");
+    setDirections("");
     setNotes("");
     setEditingId(null);
     setShowNew(false);
@@ -54,6 +60,8 @@ export default function VenuesPage() {
     setName(venue.name);
     setAddress(venue.address || "");
     setMapsUrl(venue.mapsUrl || "");
+    setDescription(venue.description || "");
+    setDirections(venue.directions || "");
     setNotes(venue.notes || "");
     setShowNew(false);
   }
@@ -67,7 +75,7 @@ export default function VenuesPage() {
     if (!name.trim()) return;
     setSaving(true);
 
-    const body = { id: editingId, name, address, mapsUrl, notes };
+    const body = { id: editingId, name, address, mapsUrl, description, directions, notes };
 
     if (editingId) {
       await fetch("/api/venues", {
@@ -169,7 +177,29 @@ export default function VenuesPage() {
             </div>
 
             <div>
-              <label className={labelClass}>Notes</label>
+              <label className={labelClass}>Description</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="e.g. A boutique co-living villa between Ban Tai and Thongsala"
+                rows={2}
+                className={`${inputClass} resize-none`}
+              />
+            </div>
+
+            <div>
+              <label className={labelClass}>How to Get There</label>
+              <textarea
+                value={directions}
+                onChange={(e) => setDirections(e.target.value)}
+                placeholder="e.g. The hill is steep, the house is the last one on the private road"
+                rows={2}
+                className={`${inputClass} resize-none`}
+              />
+            </div>
+
+            <div>
+              <label className={labelClass}>Internal Notes</label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -227,6 +257,9 @@ export default function VenuesPage() {
                     {venue.address && (
                       <p className="text-xs text-text-muted mt-0.5">{venue.address}</p>
                     )}
+                    {venue.description && (
+                      <p className="text-xs text-text-secondary mt-1">{venue.description}</p>
+                    )}
                     <div className="flex items-center gap-3 mt-2">
                       {venue.mapsUrl && (
                         <a
@@ -238,14 +271,12 @@ export default function VenuesPage() {
                           Maps →
                         </a>
                       )}
+                      {venue.directions && (
+                        <span className="text-xs text-text-muted">📍 {venue.directions}</span>
+                      )}
                       {venue._count && venue._count.events > 0 && (
                         <span className="text-xs text-text-muted font-mono">
                           {venue._count.events} event{venue._count.events !== 1 ? "s" : ""}
-                        </span>
-                      )}
-                      {venue.notes && (
-                        <span className="text-xs text-text-muted truncate max-w-[200px]" title={venue.notes}>
-                          {venue.notes}
                         </span>
                       )}
                     </div>

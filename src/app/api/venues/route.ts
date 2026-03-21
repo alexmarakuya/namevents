@@ -12,7 +12,7 @@ export async function GET() {
 
 // POST /api/venues — create a new venue
 export async function POST(req: NextRequest) {
-  const { name, address, mapsUrl, photo, notes } = await req.json();
+  const { name, address, mapsUrl, photo, description, directions, notes } = await req.json();
 
   if (!name || name.trim().length < 1) {
     return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -24,6 +24,8 @@ export async function POST(req: NextRequest) {
       address: address?.trim() || null,
       mapsUrl: mapsUrl?.trim() || null,
       photo: photo?.trim() || null,
+      description: description?.trim() || null,
+      directions: directions?.trim() || null,
       notes: notes?.trim() || null,
     },
   });
@@ -33,7 +35,7 @@ export async function POST(req: NextRequest) {
 
 // PUT /api/venues — update a venue
 export async function PUT(req: NextRequest) {
-  const { id, name, address, mapsUrl, photo, notes } = await req.json();
+  const { id, name, address, mapsUrl, photo, description, directions, notes } = await req.json();
 
   if (!id) {
     return NextResponse.json({ error: "ID is required" }, { status: 400 });
@@ -49,6 +51,8 @@ export async function PUT(req: NextRequest) {
       address: address?.trim() || null,
       mapsUrl: mapsUrl?.trim() || null,
       photo: photo?.trim() || null,
+      description: description?.trim() || null,
+      directions: directions?.trim() || null,
       notes: notes?.trim() || null,
     },
   });

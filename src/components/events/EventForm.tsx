@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { createEvent, updateEvent, deleteEvent, regenerateShareToken, addDistribution, removeDistribution } from "@/lib/actions";
+import { useRef, useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { createEvent, updateEvent, deleteEvent, regenerateShareToken, addDistribution, removeDistribution, syncToPlatform, unsyncFromPlatform, fetchPlatformAttendance } from "@/lib/actions";
 import {
   ENTITY_LABELS,
   FORMAT_LABELS,
@@ -42,7 +43,10 @@ for (let h = 0; h < 24; h++) {
 function extractDate(dt: Date | string | null): string {
   if (!dt) return "";
   const d = new Date(dt);
-  return d.toISOString().split("T")[0];
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function extractTime(dt: Date | string | null): string {
@@ -85,6 +89,8 @@ function Section({ title, defaultOpen = false, children, badge }: { title: strin
 export function EventForm({ event, venues = [], people = [] }: Props) {
   const formRef = useRef<HTMLFormElement>(null);
   const dateInputRef = useRef<HTMLInputElement>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [isPublic, setIsPublic] = useState(event?.public ?? false);
   const [shareToken, setShareToken] = useState(event?.shareToken ?? null);
   const [showDelete, setShowDelete] = useState(false);
@@ -94,6 +100,7 @@ export function EventForm({ event, venues = [], people = [] }: Props) {
   const [newPlatform, setNewPlatform] = useState("");
   const [newPlatformUrl, setNewPlatformUrl] = useState("");
   const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
+  const [copiedInstagram, setCopiedInstagram] = useState(false);
   const [aiGenerating, setAiGenerating] = useState<string | null>(null);
   const [aiTone, setAiTone] = useState("warm");
   const [showAddPerson, setShowAddPerson] = useState(false);
@@ -104,6 +111,14 @@ export function EventForm({ event, venues = [], people = [] }: Props) {
   const [newVenueName, setNewVenueName] = useState("");
   const [newVenueAddress, setNewVenueAddress] = useState("");
   const [newVenueMapsUrl, setNewVenueMapsUrl] = useState("");
+  const [syncing, setSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [isSynced, setIsSynced] = useState(!!event?.platformEventId);
+  const [attendance, setAttendance] = useState<{
+    goingCount: number;
+    interestedCount: number;
+    attendees: { displayName: string; avatarUrl: string | null; status: string }[];
+  } | null>(null);
 
   // Split date/time
   const [startDate, setStartDate] = useState(extractDate(event?.date ?? null));
@@ -164,8 +179,12 @@ export function EventForm({ event, venues = [], people = [] }: Props) {
     if (event.shortBlurb) lines.push(event.shortBlurb);
     lines.push("");
     if (event.date) lines.push(`📅 ${formatDateTime(event.date)}`);
-    if (event.location) lines.push(`📍 ${event.location}`);
-    if (event.locationUrl) lines.push(event.locationUrl);
+    const venueName = event.venue?.name || event.location;
+    if (venueName) lines.push(`📍 ${venueName}`);
+    if (event.venue?.description) lines.push(event.venue.description);
+    if (event.venue?.mapsUrl) lines.push(event.venue.mapsUrl);
+    else if (event.locationUrl) lines.push(event.locationUrl);
+    if (event.price) lines.push(`💰 ${event.price}`);
     lines.push("");
     if (event.registrationUrl) lines.push(`Register → ${event.registrationUrl}`);
     else if (event.externalUrl) lines.push(`More info → ${event.externalUrl}`);
@@ -177,6 +196,168 @@ export function EventForm({ event, venues = [], people = [] }: Props) {
     navigator.clipboard.writeText(buildWhatsAppMessage());
     setCopiedWhatsApp(true);
     setTimeout(() => setCopiedWhatsApp(false), 2000);
+  }
+
+  function buildInstagramCaption(): string {
+    if (!event) return "";
+    const lines: string[] = [];
+    lines.push(event.title);
+    lines.push("");
+    if (event.shortBlurb) {
+      lines.push(event.shortBlurb);
+      lines.push("");
+    }
+    const details: string[] = [];
+    if (event.date) {
+      const d = new Date(event.date);
+      details.push(`📅 ${d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}`);
+      const hours = d.getHours();
+      const mins = d.getMinutes();
+      const ampm = hours >= 12 ? "PM" : "AM";
+      const h = hours % 12 || 12;
+      details.push(`🕐 ${h}:${String(mins).padStart(2, "0")} ${ampm}`);
+    }
+    const venueName = event.venue?.name || event.location;
+    if (venueName) details.push(`📍 ${venueName}`);
+    if (event.venue?.description) details.push(event.venue.description);
+    if (event.price) details.push(`💰 ${event.price}`);
+    if (details.length) {
+      lines.push(details.join("\n"));
+      lines.push("");
+    }
+    if (event.registrationUrl) {
+      lines.push("Link in bio to register ☝️");
+      lines.push("");
+    }
+    // Hashtags from tags
+    const hashtags: string[] = [];
+    if (event.tags?.length) {
+      event.tags.forEach((tag) => {
+        hashtags.push(`#${tag.replace(/[^a-zA-Z0-9]/g, "")}`);
+      });
+    }
+    hashtags.push("#KohPhangan", "#IslandLife");
+    const entityTag = event.entity === "KIN_HAUS" ? "#KinHaus" : event.entity === "AI_MEETUP" ? "#AIMeetup" : event.entity === "NAM_SPACE" ? "#NaMSpace" : event.entity === "ISLAND_CONNECTION" ? "#IslandConnection" : null;
+    if (entityTag) hashtags.push(entityTag);
+    lines.push(hashtags.join(" "));
+    return lines.join("\n");
+  }
+
+  function copyInstagram() {
+    navigator.clipboard.writeText(buildInstagramCaption());
+    setCopiedInstagram(true);
+    setTimeout(() => setCopiedInstagram(false), 2000);
+  }
+
+  // Platform sync
+  useEffect(() => {
+    if (isEdit && isSynced && event?.id) {
+      fetchPlatformAttendance(event.id).then((data) => {
+        if (data) setAttendance(data);
+      });
+    }
+  }, [isEdit, isSynced, event?.id]);
+
+  // Auto-generate AI content after wizard creation
+  useEffect(() => {
+    if (searchParams.get("ai") !== "1" || !isEdit || !event) return;
+    // Clean the URL immediately
+    router.replace(`/events/${event.id}`, { scroll: false });
+
+    async function runAiGeneration() {
+      // Generate description
+      setAiGenerating("description");
+      try {
+        const res = await fetch("/api/ai/event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            rawDescription: event!.title,
+            entity: event!.entity,
+            format: event!.format,
+            date: startDate || null,
+            location: event!.venue?.name || event!.location || null,
+            tone: "warm",
+          }),
+        });
+        const data = await res.json();
+        if (data.description) setFormValue("description", data.description);
+      } catch {}
+      setAiGenerating(null);
+
+      // Generate blurb
+      setAiGenerating("blurb");
+      try {
+        const descEl = formRef.current?.elements.namedItem("description") as HTMLTextAreaElement | null;
+        const res = await fetch("/api/ai/blurb", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: event!.title,
+            description: descEl?.value || null,
+            entity: event!.entity,
+            format: event!.format,
+          }),
+        });
+        const data = await res.json();
+        if (data.blurb) setFormValue("shortBlurb", data.blurb);
+      } catch {}
+      setAiGenerating(null);
+
+      // Generate tags
+      setAiGenerating("tags");
+      try {
+        const descEl = formRef.current?.elements.namedItem("description") as HTMLTextAreaElement | null;
+        const res = await fetch("/api/ai/tags", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: event!.title,
+            description: descEl?.value || null,
+            entity: event!.entity,
+            format: event!.format,
+          }),
+        });
+        const data = await res.json();
+        if (data.tags?.length) setFormValue("tags", data.tags.join(", "));
+      } catch {}
+      setAiGenerating(null);
+    }
+
+    runAiGeneration();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function handleSync() {
+    if (!event) return;
+    setSyncing(true);
+    setSyncError(null);
+    try {
+      await syncToPlatform(event.id);
+      setIsSynced(true);
+      // Fetch attendance after sync
+      const data = await fetchPlatformAttendance(event.id);
+      if (data) setAttendance(data);
+    } catch (err) {
+      setSyncError(err instanceof Error ? err.message : "Sync failed");
+    } finally {
+      setSyncing(false);
+    }
+  }
+
+  async function handleUnsync() {
+    if (!event) return;
+    setSyncing(true);
+    setSyncError(null);
+    try {
+      await unsyncFromPlatform(event.id);
+      setIsSynced(false);
+      setAttendance(null);
+    } catch (err) {
+      setSyncError(err instanceof Error ? err.message : "Unsync failed");
+    } finally {
+      setSyncing(false);
+    }
   }
 
   // AI helpers
@@ -502,11 +683,17 @@ export function EventForm({ event, venues = [], people = [] }: Props) {
               </div>
               <input name="tags" defaultValue={event?.tags?.join(", ") ?? ""} className={inputClass} placeholder="ai, community, tech" />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelClass}>Price</label>
+                <input name="price" defaultValue={event?.price ?? ""} className={inputClass} placeholder="e.g. 300 THB, Free, Donation" />
+              </div>
               <div>
                 <label className={labelClass}>Capacity</label>
                 <input name="capacity" type="number" defaultValue={event?.capacity ?? ""} className={inputClass} placeholder="Max" />
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelClass}>Registration</label>
                 <input name="registrationUrl" type="url" defaultValue={event?.registrationUrl ?? ""} className={inputClass} placeholder="RSVP link" />
@@ -615,10 +802,16 @@ export function EventForm({ event, venues = [], people = [] }: Props) {
         <div className="rounded-2xl border border-border bg-bg-card px-5 mb-4">
           <Section title="Distribution" badge={event.distributions?.length ? `${event.distributions.length} platforms` : undefined}>
             <div className="space-y-3">
-              <button type="button" onClick={copyWhatsApp} className="rounded-full bg-[#25D366] hover:bg-[#1da851] text-white font-medium text-xs py-2 px-4 transition-colors flex items-center gap-2">
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                {copiedWhatsApp ? "Copied!" : "Copy for WhatsApp"}
-              </button>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={copyWhatsApp} className="rounded-full bg-[#25D366] hover:bg-[#1da851] text-white font-medium text-xs py-2 px-4 transition-colors flex items-center gap-2">
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                  {copiedWhatsApp ? "Copied!" : "Copy for WhatsApp"}
+                </button>
+                <button type="button" onClick={copyInstagram} className="rounded-full bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] hover:opacity-90 text-white font-medium text-xs py-2 px-4 transition-opacity flex items-center gap-2">
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                  {copiedInstagram ? "Copied!" : "Copy for Instagram"}
+                </button>
+              </div>
 
               {event.distributions && event.distributions.length > 0 && (
                 <div className="space-y-1.5">
@@ -650,6 +843,107 @@ export function EventForm({ event, venues = [], people = [] }: Props) {
               ) : (
                 <button type="button" onClick={() => setShowAddDist(true)} className="text-xs text-accent hover:text-accent-hover">+ Mark as posted</button>
               )}
+            </div>
+          </Section>
+        </div>
+      )}
+
+      {/* ── Platform Sync ── */}
+      {isEdit && (
+        <div className="rounded-2xl border border-border bg-bg-card px-5 mb-4">
+          <Section title="NāM Platform" badge={isSynced ? "Synced" : undefined}>
+            <div className="space-y-4">
+              {!isSynced ? (
+                <div className="space-y-3">
+                  <p className="text-xs text-text-muted">
+                    Publish this event to the NāM Platform so members can discover it and RSVP.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleSync}
+                    disabled={syncing}
+                    className="rounded-full bg-accent hover:bg-accent-hover text-white font-medium text-xs py-2 px-4 transition-colors disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {syncing ? (
+                      <>
+                        <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                        Syncing...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a.75.75 0 01.75.75v5.59l1.95-2.1a.75.75 0 111.1 1.02l-3.25 3.5a.75.75 0 01-1.1 0L6.2 7.26a.75.75 0 111.1-1.02l1.95 2.1V2.75A.75.75 0 0110 2z"/><path d="M5.273 4.5a1.25 1.25 0 00-1.205.918l-1.523 5.52c-.006.02-.01.041-.015.062H6a1.25 1.25 0 011.2.9l.3 1.1h5l.3-1.1A1.25 1.25 0 0114 11h3.47a1.318 1.318 0 00-.015-.062l-1.523-5.52a1.25 1.25 0 00-1.205-.918h-.558a.75.75 0 010-1.5h.558a2.75 2.75 0 012.651 2.019l1.523 5.52c.066.239.099.485.099.733V15a2.25 2.25 0 01-2.25 2.25H3.25A2.25 2.25 0 011 15v-3.228c0-.248.033-.494.099-.733l1.523-5.52A2.75 2.75 0 015.273 3.5h.558a.75.75 0 010 1z"/></svg>
+                        Publish to Platform
+                      </>
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">
+                      <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                      Live on Platform
+                    </span>
+                    {event?.platformSyncedAt && (
+                      <span className="text-xs text-text-muted">
+                        Last synced {new Date(event.platformSyncedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Attendance */}
+                  {attendance && (
+                    <div className="rounded-xl border border-border bg-bg-base p-4">
+                      <div className="flex items-center gap-6 mb-3">
+                        <div>
+                          <span className="text-2xl font-semibold text-text-primary">{attendance.goingCount}</span>
+                          <span className="text-xs text-text-muted ml-1.5">going</span>
+                        </div>
+                        <div>
+                          <span className="text-2xl font-semibold text-text-primary">{attendance.interestedCount}</span>
+                          <span className="text-xs text-text-muted ml-1.5">interested</span>
+                        </div>
+                      </div>
+                      {attendance.attendees.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {attendance.attendees.map((a) => (
+                            <div key={a.displayName} className="flex items-center gap-1.5 rounded-full bg-bg-elevated px-2.5 py-1">
+                              {a.avatarUrl ? (
+                                <img src={a.avatarUrl} alt="" className="h-4 w-4 rounded-full object-cover" />
+                              ) : (
+                                <span className="h-4 w-4 rounded-full bg-accent/20 flex items-center justify-center text-[8px] font-bold text-accent">
+                                  {a.displayName.charAt(0)}
+                                </span>
+                              )}
+                              <span className="text-xs text-text-primary">{a.displayName}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSync}
+                      disabled={syncing}
+                      className="rounded-full border border-border text-text-secondary font-medium text-xs py-2 px-4 hover:border-text-secondary transition-colors disabled:opacity-50"
+                    >
+                      {syncing ? "Syncing..." : "Re-sync"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleUnsync}
+                      disabled={syncing}
+                      className="text-xs text-text-muted hover:text-red-600"
+                    >
+                      Unpublish
+                    </button>
+                  </div>
+                </div>
+              )}
+              {syncError && <p className="text-xs text-red-600">{syncError}</p>}
             </div>
           </Section>
         </div>

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ENTITY_LABELS, ENTITY_BG_CLASSES, FORMAT_LABELS, formatDateTime } from "@/lib/utils";
@@ -6,11 +7,46 @@ interface Props {
   params: Promise<{ token: string }>;
 }
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { token } = await params;
+  const event = await prisma.event.findUnique({
+    where: { shareToken: token },
+    include: { venue: true },
+  });
+
+  if (!event) return { title: "Event Not Found" };
+
+  const title = event.title;
+  const description = event.shortBlurb || event.description?.slice(0, 160) || `${ENTITY_LABELS[event.entity]} event`;
+  const dateStr = event.date ? formatDateTime(event.date) : null;
+  const location = event.venue?.name || event.location;
+  const subtitle = [dateStr, location].filter(Boolean).join(" · ");
+  const fullDescription = subtitle ? `${subtitle}\n\n${description}` : description;
+
+  return {
+    title,
+    description: fullDescription,
+    openGraph: {
+      title,
+      description: fullDescription,
+      type: "website",
+      ...(event.coverImage ? { images: [{ url: event.coverImage, width: 1200, height: 630, alt: title }] } : {}),
+    },
+    twitter: {
+      card: event.coverImage ? "summary_large_image" : "summary",
+      title,
+      description: fullDescription,
+      ...(event.coverImage ? { images: [event.coverImage] } : {}),
+    },
+  };
+}
+
 export default async function PreviewPage({ params }: Props) {
   const { token } = await params;
 
   const event = await prisma.event.findUnique({
     where: { shareToken: token },
+    include: { venue: true },
   });
 
   if (!event) notFound();
@@ -68,19 +104,37 @@ export default async function PreviewPage({ params }: Props) {
               </span>
             </div>
           )}
-          {event.location && (
-            <div className="flex items-center gap-2 text-text-secondary">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          {(event.venue || event.location) && (
+            <div className="flex items-start gap-2 text-text-secondary">
+              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              {event.locationUrl ? (
-                <a href={event.locationUrl} target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
-                  {event.location}
-                </a>
-              ) : (
-                <span>{event.location}</span>
-              )}
+              <div>
+                {event.venue ? (
+                  <>
+                    {event.venue.mapsUrl ? (
+                      <a href={event.venue.mapsUrl} target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
+                        {event.venue.name}
+                      </a>
+                    ) : (
+                      <span>{event.venue.name}</span>
+                    )}
+                    {event.venue.description && (
+                      <p className="text-sm text-text-muted mt-0.5">{event.venue.description}</p>
+                    )}
+                    {event.venue.directions && (
+                      <p className="text-xs text-text-muted mt-1">{event.venue.directions}</p>
+                    )}
+                  </>
+                ) : event.locationUrl ? (
+                  <a href={event.locationUrl} target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">
+                    {event.location}
+                  </a>
+                ) : (
+                  <span>{event.location}</span>
+                )}
+              </div>
             </div>
           )}
           {event.capacity && (

@@ -16,13 +16,12 @@ const FORMATS = Object.keys(FORMAT_LABELS) as EventFormat[];
 
 type SectionState = "active" | "completed" | "locked";
 
-const SECTION_COUNT = 5;
+const SECTION_COUNT = 4;
 const SECTION_TITLES = [
   "What's the event called?",
   "Which entity is this for?",
   "What kind of event?",
   "When is it happening?",
-  "Where is it?",
 ];
 
 function CheckIcon({ animate }: { animate: boolean }) {
@@ -59,14 +58,13 @@ export function CreateWizard() {
   // Default date to 3 days from now
   const defaultDate = new Date();
   defaultDate.setDate(defaultDate.getDate() + 3);
-  const defaultDateStr = defaultDate.toISOString().split("T")[0];
+  const defaultDateStr = `${defaultDate.getFullYear()}-${String(defaultDate.getMonth() + 1).padStart(2, "0")}-${String(defaultDate.getDate()).padStart(2, "0")}`;
 
   const [title, setTitle] = useState("");
   const [entity, setEntity] = useState<Entity>("EXTERNAL");
   const [format, setFormat] = useState<EventFormat>("SOCIAL");
   const [dateValue, setDateValue] = useState(defaultDateStr);
   const [timeValue, setTimeValue] = useState("18:00");
-  const [location, setLocation] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   // Generate 30-minute time slots
@@ -90,7 +88,6 @@ export function CreateWizard() {
       case 1: return true; // entity always has a value
       case 2: return true; // format always has a value
       case 3: return true; // date is optional
-      case 4: return true; // location is optional
       default: return false;
     }
   }, [title]);
@@ -139,7 +136,6 @@ export function CreateWizard() {
         const dateStr = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
         return timeValue ? `${dateStr} at ${timeValue}` : dateStr;
       }
-      case 4: return location || "No venue yet";
       default: return "";
     }
   }
@@ -162,8 +158,8 @@ export function CreateWizard() {
       const combined = dateValue + "T" + (timeValue || "00:00");
       formData.set("date", combined);
     }
-    if (location) formData.set("location", location);
     formData.set("public", "false");
+    formData.set("fromWizard", "true");
     await createEvent(formData);
   }
 
@@ -327,20 +323,6 @@ export function CreateWizard() {
                         </select>
                       </div>
                     </div>
-                    <OkButton onClick={() => advanceSection(3)} label="OK" hint="press Enter" />
-                  </div>
-                )}
-
-                {index === 4 && (
-                  <div>
-                    <input
-                      type="text"
-                      autoFocus
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      placeholder="Venue or address"
-                      className="w-full rounded-xl border border-border bg-bg-base px-4 py-3 text-text-primary placeholder:text-text-muted/50 focus:border-accent focus:outline-none transition-colors"
-                    />
                     <div className="mt-5 flex items-center gap-3">
                       <button
                         type="button"
@@ -350,9 +332,7 @@ export function CreateWizard() {
                       >
                         {submitting ? "Creating..." : "Create Event"}
                       </button>
-                      <span className="font-mono text-xs text-text-muted">
-                        {location ? "" : "venue is optional"}
-                      </span>
+                      <span className="font-mono text-xs text-text-muted">press Enter</span>
                     </div>
                   </div>
                 )}
