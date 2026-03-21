@@ -1,0 +1,40 @@
+/* Auto-generated Tailwind v4 preset — do not edit manually */
+/* Run: pnpm build in @nam/tokens to regenerate */
+
+@theme inline {
+  /* Backgrounds */
+  --color-bg-base: var(--color-bg-base);
+  --color-bg-surface: var(--color-bg-surface);
+  --color-bg-card: var(--color-bg-card);
+  --color-bg-elevated: var(--color-bg-elevated);
+
+  /* Text */
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-heading: var(--color-text-heading);
+
+  /* Accent */
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-soft: var(--color-accent-soft);
+
+  /* Borders */
+  --color-border: var(--color-border);
+  --color-border-subtle: var(--color-border-subtle);
+
+  /* Interactive */
+  --color-focus: var(--color-focus);
+
+  /* Entity colors */
+  --color-entity-kinhaus: var(--color-entity-kinhaus);
+  --color-entity-ai-meetup: var(--color-entity-ai-meetup);
+  --color-entity-island-connection: var(--color-entity-island-connection);
+  --color-entity-nam-space: var(--color-entity-nam-space);
+  --color-entity-external: var(--color-entity-external);
+
+  /* Typography */
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+  --font-editorial: var(--font-editorial);
+}

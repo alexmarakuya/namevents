@@ -1,0 +1,229 @@
+/* ============================================================
+   NāM Design System — Primitive Tokens
+   Raw palette values. Never reference these directly in apps.
+   Use semantic tokens instead.
+   ============================================================ */
+
+:root {
+  /* Earth palette */
+  --nam-deep-green: #2b3a2c;
+  --nam-foliage: #49584a;
+  --nam-sage: #b8c8b7;
+  --nam-sapling: #a3b2a2;
+  --nam-oat: #e7e2d6;
+  --nam-cream: #f5f2e9;
+  --nam-beige: #ccc4b5;
+  --nam-white: #ffffff;
+
+  /* Warm neutrals */
+  --nam-slate: #393834;
+  --nam-granite: #61605c;
+  --nam-pebble: #7d7970;
+
+  /* Accent */
+  --nam-sunwashed: #d56b45;
+  --nam-sunwashed-hover: #c25a37;
+  --nam-sunwashed-soft: rgba(213, 107, 69, 0.08);
+
+  /* Studio accents (dark theme) */
+  --nam-gold: #c99a6a;
+  --nam-gold-soft: rgba(201, 154, 106, 0.15);
+  --nam-moss: #5d7a54;
+  --nam-copper: #a8724a;
+
+  /* Dashboard accents (dark theme) */
+  --nam-indigo: #6366f1;
+  --nam-violet: #8b5cf6;
+  --nam-amber: #f59e0b;
+
+  /* Entity colors */
+  --nam-entity-kinhaus: #D97706;
+  --nam-entity-ai-meetup: #7C3AED;
+  --nam-entity-island-connection: #059669;
+  --nam-entity-nam-space: #0891B2;
+  --nam-entity-external: #6B7280;
+
+  /* Status colors */
+  --nam-status-active: #22c55e;
+  --nam-status-paused: #f59e0b;
+  --nam-status-archived: #525252;
+
+  /* Priority colors */
+  --nam-priority-high: #ef4444;
+  --nam-priority-medium: #f59e0b;
+  --nam-priority-low: #6b7280;
+}
+
+
+/* ============================================================
+   NāM Design System — Typography Tokens
+   ============================================================ */
+
+:root {
+  /* Font families */
+  --font-display: "Epilogue", sans-serif;
+  --font-mono: "Sometype Mono", monospace;
+  --font-editorial: "Cormorant Garamond", serif;
+
+  /* Type scale */
+  --text-xs: 0.75rem;     /* 12px */
+  --text-sm: 0.875rem;    /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg: 1.125rem;    /* 18px */
+  --text-xl: 1.5rem;      /* 24px */
+  --text-2xl: 2rem;       /* 32px */
+  --text-3xl: 3rem;       /* 48px */
+  --text-4xl: 4.5rem;     /* 72px */
+  --text-5xl: 7rem;       /* 112px */
+
+  /* Line heights */
+  --leading-tight: 1.1;
+  --leading-snug: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+
+  /* Letter spacing */
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.05em;
+  --tracking-wider: 0.1em;
+
+  /* Font weights */
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+}
+
+
+/* ============================================================
+   NāM Design System — Spacing Tokens
+   ============================================================ */
+
+:root {
+  /* Spacing scale (4px base) */
+  --space-0: 0;
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  --space-20: 5rem;     /* 80px */
+  --space-24: 6rem;     /* 96px */
+
+  /* Grid */
+  --grid-margin: 3.75rem;
+  --grid-gutter: 5rem;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --grid-margin: 1.5rem;
+    --grid-gutter: 2.5rem;
+  }
+}
+
+
+/* ============================================================
+   NāM Design System — Motion Tokens
+   ============================================================ */
+
+:root {
+  /* Easing curves */
+  --ease-water: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-emerge: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+
+  /* Durations */
+  --duration-fast: 150ms;
+  --duration-base: 300ms;
+  --duration-slow: 500ms;
+  --duration-slower: 700ms;
+  --duration-cinematic: 1200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+    --duration-slower: 0ms;
+    --duration-cinematic: 0ms;
+  }
+}
+
+
+/* ============================================================
+   NāM Design System — Border Radius Tokens
+   ============================================================ */
+
+:root {
+  --radius-none: 0;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+  --radius-full: 9999px;
+}
+
+
+/* ============================================================
+   NāM Design System — Dark Theme
+   Used by: dashboard
+   ============================================================ */
+
+[data-theme="dark"] {
+  /* Backgrounds */
+  --color-bg-base: #0a0a0a;
+  --color-bg-surface: #141414;
+  --color-bg-card: #1a1a1a;
+  --color-bg-elevated: #1a1a1a;
+
+  /* Text */
+  --color-text-primary: #fafafa;
+  --color-text-secondary: #a3a3a3;
+  --color-text-muted: #525252;
+  --color-text-heading: #fafafa;
+
+  /* Accent */
+  --color-accent: var(--nam-indigo);
+  --color-accent-hover: #818cf8;
+  --color-accent-soft: rgba(99, 102, 241, 0.1);
+
+  /* Borders */
+  --color-border: #262626;
+  --color-border-subtle: #1a1a1a;
+
+  /* Interactive */
+  --color-focus: var(--nam-indigo);
+  --color-selection: rgba(99, 102, 241, 0.2);
+
+  /* Dashboard-specific accent aliases */
+  --color-accent-nam: var(--nam-indigo);
+  --color-accent-kinhaus: var(--nam-amber);
+  --color-accent-personal: var(--nam-violet);
+
+  /* Status */
+  --color-status-active: var(--nam-status-active);
+  --color-status-paused: var(--nam-status-paused);
+  --color-status-archived: var(--nam-status-archived);
+
+  /* Priority */
+  --color-priority-high: var(--nam-priority-high);
+  --color-priority-medium: var(--nam-priority-medium);
+  --color-priority-low: var(--nam-priority-low);
+
+  /* Entity colors (pass-through) */
+  --color-entity-kinhaus: var(--nam-entity-kinhaus);
+  --color-entity-ai-meetup: var(--nam-entity-ai-meetup);
+  --color-entity-island-connection: var(--nam-entity-island-connection);
+  --color-entity-nam-space: var(--nam-entity-nam-space);
+  --color-entity-external: var(--nam-entity-external);
+}

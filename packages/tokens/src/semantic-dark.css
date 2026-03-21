@@ -1,0 +1,53 @@
+/* ============================================================
+   NāM Design System — Dark Theme
+   Used by: dashboard
+   ============================================================ */
+
+[data-theme="dark"] {
+  /* Backgrounds */
+  --color-bg-base: #0a0a0a;
+  --color-bg-surface: #141414;
+  --color-bg-card: #1a1a1a;
+  --color-bg-elevated: #1a1a1a;
+
+  /* Text */
+  --color-text-primary: #fafafa;
+  --color-text-secondary: #a3a3a3;
+  --color-text-muted: #525252;
+  --color-text-heading: #fafafa;
+
+  /* Accent */
+  --color-accent: var(--nam-indigo);
+  --color-accent-hover: #818cf8;
+  --color-accent-soft: rgba(99, 102, 241, 0.1);
+
+  /* Borders */
+  --color-border: #262626;
+  --color-border-subtle: #1a1a1a;
+
+  /* Interactive */
+  --color-focus: var(--nam-indigo);
+  --color-selection: rgba(99, 102, 241, 0.2);
+
+  /* Dashboard-specific accent aliases */
+  --color-accent-nam: var(--nam-indigo);
+  --color-accent-kinhaus: var(--nam-amber);
+  --color-accent-personal: var(--nam-violet);
+
+  /* Status */
+  --color-status-active: var(--nam-status-active);
+  --color-status-paused: var(--nam-status-paused);
+  --color-status-archived: var(--nam-status-archived);
+
+  /* Priority */
+  --color-priority-high: var(--nam-priority-high);
+  --color-priority-medium: var(--nam-priority-medium);
+  --color-priority-low: var(--nam-priority-low);
+
+  /* Entity colors (pass-through) */
+  --color-entity-kinhaus: var(--nam-entity-kinhaus);
+  --color-entity-ai-meetup: var(--nam-entity-ai-meetup);
+  --color-entity-island-connection: var(--nam-entity-island-connection);
+  --color-entity-nam-space: var(--nam-entity-nam-space);
+  --color-entity-external: var(--nam-entity-external);
+}

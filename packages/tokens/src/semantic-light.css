@@ -1,0 +1,39 @@
+/* ============================================================
+   NāM Design System — Light Theme (Earth)
+   Used by: nam-platform, nam-events, nam-website
+   ============================================================ */
+
+[data-theme="light"],
+:root {
+  /* Backgrounds */
+  --color-bg-base: var(--nam-cream);
+  --color-bg-surface: #ede9df;
+  --color-bg-card: var(--nam-white);
+  --color-bg-elevated: var(--nam-oat);
+
+  /* Text */
+  --color-text-primary: var(--nam-slate);
+  --color-text-secondary: var(--nam-granite);
+  --color-text-muted: var(--nam-pebble);
+  --color-text-heading: var(--nam-deep-green);
+
+  /* Accent */
+  --color-accent: var(--nam-sunwashed);
+  --color-accent-hover: var(--nam-sunwashed-hover);
+  --color-accent-soft: var(--nam-sunwashed-soft);
+
+  /* Borders */
+  --color-border: #d9d4c9;
+  --color-border-subtle: #e4e0d7;
+
+  /* Interactive */
+  --color-focus: var(--nam-sunwashed);
+  --color-selection: rgba(213, 107, 69, 0.2);
+
+  /* Entity colors (pass-through) */
+  --color-entity-kinhaus: var(--nam-entity-kinhaus);
+  --color-entity-ai-meetup: var(--nam-entity-ai-meetup);
+  --color-entity-island-connection: var(--nam-entity-island-connection);
+  --color-entity-nam-space: var(--nam-entity-nam-space);
+  --color-entity-external: var(--nam-entity-external);
+}

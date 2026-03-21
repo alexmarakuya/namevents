@@ -1,0 +1,55 @@
+/* ============================================================
+   NāM Design System — Primitive Tokens
+   Raw palette values. Never reference these directly in apps.
+   Use semantic tokens instead.
+   ============================================================ */
+
+:root {
+  /* Earth palette */
+  --nam-deep-green: #2b3a2c;
+  --nam-foliage: #49584a;
+  --nam-sage: #b8c8b7;
+  --nam-sapling: #a3b2a2;
+  --nam-oat: #e7e2d6;
+  --nam-cream: #f5f2e9;
+  --nam-beige: #ccc4b5;
+  --nam-white: #ffffff;
+
+  /* Warm neutrals */
+  --nam-slate: #393834;
+  --nam-granite: #61605c;
+  --nam-pebble: #7d7970;
+
+  /* Accent */
+  --nam-sunwashed: #d56b45;
+  --nam-sunwashed-hover: #c25a37;
+  --nam-sunwashed-soft: rgba(213, 107, 69, 0.08);
+
+  /* Studio accents (dark theme) */
+  --nam-gold: #c99a6a;
+  --nam-gold-soft: rgba(201, 154, 106, 0.15);
+  --nam-moss: #5d7a54;
+  --nam-copper: #a8724a;
+
+  /* Dashboard accents (dark theme) */
+  --nam-indigo: #6366f1;
+  --nam-violet: #8b5cf6;
+  --nam-amber: #f59e0b;
+
+  /* Entity colors */
+  --nam-entity-kinhaus: #D97706;
+  --nam-entity-ai-meetup: #7C3AED;
+  --nam-entity-island-connection: #059669;
+  --nam-entity-nam-space: #0891B2;
+  --nam-entity-external: #6B7280;
+
+  /* Status colors */
+  --nam-status-active: #22c55e;
+  --nam-status-paused: #f59e0b;
+  --nam-status-archived: #525252;
+
+  /* Priority colors */
+  --nam-priority-high: #ef4444;
+  --nam-priority-medium: #f59e0b;
+  --nam-priority-low: #6b7280;
+}
