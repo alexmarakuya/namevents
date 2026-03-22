@@ -259,6 +259,11 @@ export async function syncToPlatform(eventId: string) {
       price: event.price || null,
       venue: event.venue?.name || event.location || null,
       venueUrl: event.venue?.mapsUrl || event.locationUrl || null,
+      venueDetails: event.venue ? {
+        description: event.venue.description || undefined,
+        directions: event.venue.directions || undefined,
+        address: event.venue.address || undefined,
+      } : undefined,
       entryType: event.registrationUrl ? "rsvp" : "walk-in",
       imageUrl: event.coverImage || null,
       externalUrl: event.externalUrl || null,
