@@ -258,7 +258,7 @@ export default async function PreviewPage({ params }: Props) {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-text-primary">{ep.person.name}</p>
-                        {ep.customTitle && <p className="text-xs text-text-muted">{ep.customTitle}</p>}
+                        {ep.person.bio && <p className="text-xs text-text-muted line-clamp-1">{ep.person.bio}</p>}
                       </div>
                     </div>
                   ))}
@@ -278,7 +278,7 @@ export default async function PreviewPage({ params }: Props) {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-text-primary">{ep.person.name}</p>
-                        {ep.customTitle && <p className="text-xs text-text-muted">{ep.customTitle}</p>}
+                        {ep.person.bio && <p className="text-xs text-text-muted line-clamp-1">{ep.person.bio}</p>}
                       </div>
                     </div>
                   ))}

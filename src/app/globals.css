@@ -43,6 +43,14 @@ button:focus-visible {
   outline-offset: 2px;
 }
 
+/* Input focus — just change border color, no outline ring */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
 /* Select dropdowns — consistent chevron spacing */
 select {
   appearance: none;

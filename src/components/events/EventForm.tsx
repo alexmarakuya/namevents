@@ -42,6 +42,10 @@ for (let h = 0; h < 24; h++) {
 
 function extractDate(dt: Date | string | null): string {
   if (!dt) return "";
+  // Parse ISO string directly to avoid timezone drift
+  const iso = typeof dt === "string" ? dt : dt.toISOString();
+  const match = iso.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (match) return match[1];
   const d = new Date(dt);
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, "0");
@@ -51,6 +55,14 @@ function extractDate(dt: Date | string | null): string {
 
 function extractTime(dt: Date | string | null): string {
   if (!dt) return "18:00";
+  // Parse ISO string directly to avoid timezone drift
+  const iso = typeof dt === "string" ? dt : dt.toISOString();
+  const match = iso.match(/T(\d{2}):(\d{2})/);
+  if (match) {
+    const h = match[1];
+    const m = parseInt(match[2]) >= 30 ? "30" : "00";
+    return `${h}:${m}`;
+  }
   const d = new Date(dt);
   const h = String(d.getHours()).padStart(2, "0");
   const m = d.getMinutes() >= 30 ? "30" : "00";
@@ -209,13 +221,22 @@ export function EventForm({ event, venues = [], people = [] }: Props) {
     }
     const details: string[] = [];
     if (event.date) {
-      const d = new Date(event.date);
+      const dateStr = extractDate(event.date);
+      const d = new Date(dateStr + "T12:00:00");
       details.push(`📅 ${d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}`);
-      const hours = d.getHours();
-      const mins = d.getMinutes();
-      const ampm = hours >= 12 ? "PM" : "AM";
-      const h = hours % 12 || 12;
-      details.push(`🕐 ${h}:${String(mins).padStart(2, "0")} ${ampm}`);
+      const timeStr = extractTime(event.date);
+      const endStr = event.endDate ? extractTime(event.endDate) : null;
+      const [th, tm] = timeStr.split(":").map(Number);
+      const ampm = th >= 12 ? "PM" : "AM";
+      const h12 = th % 12 || 12;
+      let timeDisplay = `🕐 ${h12}:${String(tm).padStart(2, "0")} ${ampm}`;
+      if (endStr) {
+        const [eh, em] = endStr.split(":").map(Number);
+        const eampm = eh >= 12 ? "PM" : "AM";
+        const eh12 = eh % 12 || 12;
+        timeDisplay += ` – ${eh12}:${String(em).padStart(2, "0")} ${eampm}`;
+      }
+      details.push(timeDisplay);
     }
     const venueName = event.venue?.name || event.location;
     if (venueName) details.push(`📍 ${venueName}`);
@@ -598,41 +619,34 @@ export function EventForm({ event, venues = [], people = [] }: Props) {
       {/* ── Venue ── */}
       <div className="rounded-2xl border border-border bg-bg-card p-5 mb-4">
         <label className={labelClass}>Venue</label>
-        {isEdit ? (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <select value={event?.venueId ?? ""} onChange={(e) => handleSelectVenue(e.target.value)} className={`flex-1 ${inputClass} cursor-pointer`}>
-                <option value="">Select a venue...</option>
-                {venues.map((v) => <option key={v.id} value={v.id}>{v.name}{v.address ? ` — ${v.address}` : ""}</option>)}
-              </select>
-              <button type="button" onClick={() => setShowNewVenue(!showNewVenue)} className="rounded-full border border-dashed border-border hover:border-accent text-text-secondary hover:text-accent text-xs py-3 px-3 transition-colors flex-shrink-0">
-                + New
-              </button>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <select value={event?.venueId ?? ""} onChange={(e) => handleSelectVenue(e.target.value)} className={`flex-1 ${inputClass} cursor-pointer`}>
+              <option value="">Select a venue...</option>
+              {venues.map((v) => <option key={v.id} value={v.id}>{v.name}{v.address ? ` — ${v.address}` : ""}</option>)}
+            </select>
+            <button type="button" onClick={() => setShowNewVenue(!showNewVenue)} className="rounded-full border border-dashed border-border hover:border-accent text-text-secondary hover:text-accent text-xs py-3 px-3 transition-colors flex-shrink-0">
+              + New
+            </button>
+          </div>
+          {event?.venue && (
+            <div className="text-xs text-text-muted flex items-center gap-3">
+              {event.venue.address && <span>📍 {event.venue.address}</span>}
+              {event.venue.mapsUrl && <a href={event.venue.mapsUrl} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover">Maps →</a>}
             </div>
-            {event?.venue && (
-              <div className="text-xs text-text-muted flex items-center gap-3">
-                {event.venue.address && <span>📍 {event.venue.address}</span>}
-                {event.venue.mapsUrl && <a href={event.venue.mapsUrl} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover">Maps →</a>}
+          )}
+          {showNewVenue && (
+            <div className="space-y-2 mt-2">
+              <input type="text" value={newVenueName} onChange={(e) => setNewVenueName(e.target.value)} placeholder="Venue name" className={inputClass} />
+              <input type="text" value={newVenueAddress} onChange={(e) => setNewVenueAddress(e.target.value)} placeholder="Address (optional)" className={inputClass} />
+              <input type="url" value={newVenueMapsUrl} onChange={(e) => setNewVenueMapsUrl(e.target.value)} placeholder="Google Maps link (optional)" className={inputClass} />
+              <div className="flex gap-2">
+                <button type="button" onClick={handleCreateVenue} disabled={!newVenueName.trim()} className="rounded-full bg-accent hover:bg-accent-hover text-white text-xs font-medium py-2 px-4 disabled:opacity-50">Create & Select</button>
+                <button type="button" onClick={() => setShowNewVenue(false)} className="text-xs text-text-muted">Cancel</button>
               </div>
-            )}
-            {showNewVenue && (
-              <div className="space-y-2 mt-2">
-                <input type="text" value={newVenueName} onChange={(e) => setNewVenueName(e.target.value)} placeholder="Venue name" className={inputClass} />
-                <input type="text" value={newVenueAddress} onChange={(e) => setNewVenueAddress(e.target.value)} placeholder="Address (optional)" className={inputClass} />
-                <input type="url" value={newVenueMapsUrl} onChange={(e) => setNewVenueMapsUrl(e.target.value)} placeholder="Google Maps link (optional)" className={inputClass} />
-                <div className="flex gap-2">
-                  <button type="button" onClick={handleCreateVenue} disabled={!newVenueName.trim()} className="rounded-full bg-accent hover:bg-accent-hover text-white text-xs font-medium py-2 px-4 disabled:opacity-50">Create & Select</button>
-                  <button type="button" onClick={() => setShowNewVenue(false)} className="text-xs text-text-muted">Cancel</button>
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-3">
-            <input name="location" defaultValue="" placeholder="Venue or address" className={inputClass} />
-            <input name="locationUrl" type="url" defaultValue="" placeholder="Google Maps link" className={inputClass} />
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── Content (blurb + description + image) ── */}
