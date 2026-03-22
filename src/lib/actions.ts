@@ -263,6 +263,7 @@ export async function syncToPlatform(eventId: string) {
         description: event.venue.description || undefined,
         directions: event.venue.directions || undefined,
         address: event.venue.address || undefined,
+        photo: event.venue.photo || undefined,
       } : undefined,
       entryType: event.registrationUrl ? "rsvp" : "walk-in",
       imageUrl: event.coverImage || null,
