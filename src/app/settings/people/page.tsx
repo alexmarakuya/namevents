@@ -185,7 +185,7 @@ export default function PeoplePage() {
         ) : (
           <div className="space-y-2">
             {people.map((person) => (
-              <div key={person.id} className="rounded-2xl border border-border bg-bg-card hover:border-accent/20 transition-colors overflow-hidden">
+              <div key={person.id} className="rounded-2xl border border-border bg-bg-card transition-all hover:border-accent/30 hover:shadow-sm overflow-hidden">
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">

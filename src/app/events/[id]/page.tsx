@@ -27,16 +27,11 @@ export default async function EditEventPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-bg-base">
       <Header />
-      <main className="px-6 py-8">
-        <h1 className="font-display text-2xl font-bold text-text-primary mb-6">
-          Edit Event
-        </h1>
-        <EventForm
-          event={JSON.parse(JSON.stringify(event))}
-          venues={JSON.parse(JSON.stringify(venues))}
-          people={JSON.parse(JSON.stringify(people))}
-        />
-      </main>
+      <EventForm
+        event={JSON.parse(JSON.stringify(event))}
+        venues={JSON.parse(JSON.stringify(venues))}
+        people={JSON.parse(JSON.stringify(people))}
+      />
     </div>
   );
 }
