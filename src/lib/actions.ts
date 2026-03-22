@@ -226,10 +226,21 @@ export async function syncToPlatform(eventId: string) {
 
   const event = await prisma.event.findUnique({
     where: { id: eventId },
-    include: { venue: true },
+    include: {
+      venue: true,
+      people: { include: { person: true }, orderBy: { order: "asc" } },
+    },
   });
 
   if (!event) throw new Error("Event not found");
+
+  // Map speakers/hosts for the platform
+  const speakers = event.people.map((ep) => ({
+    name: ep.person.name,
+    role: ep.role === "HOST" ? "Host" : "Speaker",
+    bio: ep.person.bio || undefined,
+    linkedinUrl: ep.person.linkedin || undefined,
+  }));
 
   const res = await fetch(`${platformUrl}/api/events/sync`, {
     method: "POST",
@@ -239,6 +250,7 @@ export async function syncToPlatform(eventId: string) {
     },
     body: JSON.stringify({
       sourceId: event.id,
+      slug: event.slug,
       title: event.title,
       description: event.description,
       date: event.date ? event.date.toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
@@ -246,10 +258,12 @@ export async function syncToPlatform(eventId: string) {
       endTime: event.endDate ? formatTime12h(event.endDate) : null,
       price: event.price || null,
       venue: event.venue?.name || event.location || null,
+      venueUrl: event.venue?.mapsUrl || event.locationUrl || null,
       entryType: event.registrationUrl ? "rsvp" : "walk-in",
       imageUrl: event.coverImage || null,
       externalUrl: event.externalUrl || null,
       interests: event.tags,
+      speakers: speakers.length > 0 ? speakers : undefined,
       isPublished: true,
     }),
   });
